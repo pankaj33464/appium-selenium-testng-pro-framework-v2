@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [web, android_native, android_web, ios_native, ios_web]
+
+    env:
+      GRID_URL: ${{ secrets.GRID_URL }}
+      BS_USERNAME: ${{ secrets.BS_USERNAME }}
+      BS_ACCESS_KEY: ${{ secrets.BS_ACCESS_KEY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+
+      - name: Build
+        run: mvn -B -DskipTests clean package
+
+      - name: Run tests (matrix)
+        run: |
+          if [[ "${{ matrix.platform }}" == "web" ]]; then
+            mvn -B test -Dplatform=web -Dweb.browser=chrome
+          elif [[ -n "${GRID_URL}" || ( -n "${BS_USERNAME}" && -n "${BS_ACCESS_KEY}" ) ]]; then
+            # Example: when GRID_URL present, route to remote grid (e.g., BrowserStack/Sauce)
+            mvn -B test -Dplatform=${{ matrix.platform }} -Dgrid.url="${GRID_URL}" -Dbs.username="${BS_USERNAME}" -Dbs.accessKey="${BS_ACCESS_KEY}"
+          else
+            echo "⚠️ Mobile job skipped: set GRID_URL or BS_* secrets to run on cloud real devices."
+          fi

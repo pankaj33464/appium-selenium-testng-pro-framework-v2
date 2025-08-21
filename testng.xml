@@ -1,0 +1,21 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd" >
+<suite name="Pro Parallel Suite" verbose="1" parallel="methods" thread-count="4">
+  <listeners>
+    <listener class-name="framework.listeners.TestListener"/>
+  </listeners>
+
+  <test name="All Tests">
+    <groups>
+      <run>
+        <include name="web"/>
+        <include name="mobile_native"/>
+        <include name="mobile_web"/>
+      </run>
+    </groups>
+    <classes>
+      <class name="framework.tests.web.GoogleSearchTest"/>
+      <class name="framework.tests.mobile.nativeapp.SampleAndroidNativeTest"/>
+      <class name="framework.tests.mobile.web.SampleMobileWebTest"/>
+    </classes>
+  </test>
+</suite>
